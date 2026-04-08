@@ -124,6 +124,12 @@
         .divider:not(:empty)::after { margin-left: 15px; }
 
     </style>
+
+    <!-- PWA Settings -->
+    <meta name="theme-color" content="#10B981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
 </head>
 <body>
 
@@ -174,6 +180,27 @@
             </div>
         </div>
     </main>
+
+
+    <!-- Mobile Bottom Navigation (PWA UX) -->
+    <div class="mobile-bottom-nav">
+        <a href="index.html" class="nav-item">
+            <ion-icon name="home-outline" class="nav-icon"></ion-icon>
+            Home
+        </a>
+        <a href="cart.html" class="nav-item">
+            <ion-icon name="cart-outline" class="nav-icon"></ion-icon>
+            Cart
+        </a>
+        <a href="delivery.html" class="nav-item">
+            <ion-icon name="cube-outline" class="nav-icon"></ion-icon>
+            Track
+        </a>
+        <a href="login.html" class="nav-item active">
+            <ion-icon name="person-outline" class="nav-icon"></ion-icon>
+            Profile
+        </a>
+    </div>
 
 </body>
 </html>

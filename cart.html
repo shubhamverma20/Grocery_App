@@ -185,6 +185,12 @@
             100% { transform: scale(1); }
         }
     </style>
+
+    <!-- PWA Settings -->
+    <meta name="theme-color" content="#10B981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
 </head>
 <body>
 
@@ -307,6 +313,27 @@
         <h1 style="font-size: 36px; margin-bottom: 10px; font-family: Outfit;">Order Placed Successfully!</h1>
         <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 18px;">Your groceries are on the way. Order ID: #ORD-9824X</p>
         <a href="delivery.html"><button class="btn-primary" style="padding: 14px 30px; font-size: 16px;">Track Your Order</button></a>
+    </div>
+
+    
+    <!-- Mobile Bottom Navigation (PWA UX) -->
+    <div class="mobile-bottom-nav">
+        <a href="index.html" class="nav-item">
+            <ion-icon name="home-outline" class="nav-icon"></ion-icon>
+            Home
+        </a>
+        <a href="cart.html" class="nav-item active">
+            <ion-icon name="cart-outline" class="nav-icon"></ion-icon>
+            Cart
+        </a>
+        <a href="delivery.html" class="nav-item">
+            <ion-icon name="cube-outline" class="nav-icon"></ion-icon>
+            Track
+        </a>
+        <a href="login.html" class="nav-item">
+            <ion-icon name="person-outline" class="nav-icon"></ion-icon>
+            Profile
+        </a>
     </div>
 
     <script src="js/app.js"></script>
