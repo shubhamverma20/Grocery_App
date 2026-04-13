@@ -1,6 +1,6 @@
 // Dynamic API URL for Local vs Production
 const API_URL = window.location.hostname.includes('github.io')
-    ? 'https://grocery-app-backend-shubham.onrender.com/api' // Replace with your Render URL later
+    ? 'https://grocery-app-xika.onrender.com/api' 
     : `http://${window.location.hostname}:5000/api`;
 
 // Product Catalog (Loaded from Backend)
