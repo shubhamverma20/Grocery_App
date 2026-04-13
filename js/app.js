@@ -1,6 +1,6 @@
 // Dynamic API URL for Local vs Production
 const API_URL = window.location.hostname.includes('github.io')
-    ? 'https://grocery-app-xika.onrender.com/api' 
+    ? 'https://grocery-app-xika.onrender.com/api'
     : `http://${window.location.hostname}:5000/api`;
 
 // Product Catalog (Loaded from Backend)
@@ -33,7 +33,7 @@ function cleanImageUrl(p) {
     };
 
     if (replacements[p.name]) return replacements[p.name];
-    
+
     // If it's a placeholder or missing, return a generic high-quality grocery image
     if (!p.image || p.image.includes('placehold.co')) {
         return `https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400`;
@@ -279,7 +279,7 @@ function updateNavUI() {
             <button onclick="logout()" class="nav-link" style="border:none; background:none; cursor:pointer; color: #EF4444;">Logout</button>
             <button class="cart-btn" onclick="toggleCart()">
                 <ion-icon name="cart-outline"></ion-icon>
-                <span class="cart-badge" id="cartCount">${cart.reduce((s,i)=>s+i.quantity,0)}</span>
+                <span class="cart-badge" id="cartCount">${cart.reduce((s, i) => s + i.quantity, 0)}</span>
             </button>
         `;
     } else {
@@ -289,7 +289,7 @@ function updateNavUI() {
             <a href="signup.html" class="btn-primary">Sign Up</a>
             <button class="cart-btn" onclick="toggleCart()">
                 <ion-icon name="cart-outline"></ion-icon>
-                <span class="cart-badge" id="cartCount">${cart.reduce((s,i)=>s+i.quantity,0)}</span>
+                <span class="cart-badge" id="cartCount">${cart.reduce((s, i) => s + i.quantity, 0)}</span>
             </button>
         `;
     }
