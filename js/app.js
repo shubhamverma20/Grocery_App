@@ -1,155 +1,44 @@
-// Default Product Catalog
-const DEFAULT_PRODUCTS = [
-    {
-        id: 1,
-        name: "Fresh Organic Bananas",
-        category: "Fruits",
-        price: 80,
-        originalPrice: 100,
-        image: "assets/images/bananas.png",
-        rating: 4.8,
-        reviews: 120,
-        badge: "Bestseller"
-    },
-    {
-        id: 2,
-        name: "Farm Fresh Tomatoes",
-        category: "Vegetables",
-        price: 45,
-        originalPrice: 60,
-        image: "assets/images/tomatoes.png",
-        rating: 4.5,
-        reviews: 85,
-        badge: "Fresh Arrival"
-    },
-    {
-        id: 3,
-        name: "Whole Wheat Bread",
-        category: "Bakery",
-        price: 55,
-        originalPrice: 65,
-        image: "assets/images/bread.png",
-        rating: 4.7,
-        reviews: 230,
-        badge: null
-    },
-    {
-        id: 4,
-        name: "Amul Pure Milk (1L)",
-        category: "Dairy & Eggs",
-        price: 66,
-        originalPrice: 66,
-        image: "assets/images/milk.png",
-        rating: 4.9,
-        reviews: 500,
-        badge: "High Demand"
-    },
-    {
-        id: 5,
-        name: "Organic Red Apples",
-        category: "Fruits",
-        price: 220,
-        originalPrice: 250,
-        image: "assets/images/apples.png",
-        rating: 4.6,
-        reviews: 156,
-        badge: "Offer"
-    },
-    {
-        id: 6,
-        name: "Green Spinach Bunch",
-        category: "Vegetables",
-        price: 25,
-        originalPrice: 35,
-        image: "assets/images/spinach.png",
-        rating: 4.3,
-        reviews: 90,
-        badge: null
-    },
-    {
-        id: 7,
-        name: "Free Range Eggs (6 Pcs)",
-        category: "Dairy & Eggs",
-        price: 60,
-        originalPrice: 75,
-        image: "assets/images/eggs.png",
-        rating: 4.7,
-        reviews: 310,
-        badge: "Bestseller"
-    },
-    {
-        id: 8,
-        name: "Fresh Coriander Leaves",
-        category: "Vegetables",
-        price: 15,
-        originalPrice: 25,
-        image: "assets/images/spinach.png",
-        rating: 4.4,
-        reviews: 45,
-        badge: null
-    },
-    {
-        id: 9,
-        name: "Cadbury Dairy Milk",
-        category: "Snacks",
-        price: 45,
-        originalPrice: 50,
-        image: "https://placehold.co/400x400/4A1C40/FFFFFF?text=Chocolate",
-        rating: 4.9,
-        reviews: 880,
-        badge: "Bestseller"
-    },
-    {
-        id: 10,
-        name: "Lays Classic Chips",
-        category: "Snacks",
-        price: 30,
-        originalPrice: 35,
-        image: "https://placehold.co/400x400/D4A017/333333?text=Chips",
-        rating: 4.6,
-        reviews: 640,
-        badge: "Offer"
-    },
-    {
-        id: 11,
-        name: "Britannia Good Day Biscuits",
-        category: "Snacks",
-        price: 25,
-        originalPrice: 30,
-        image: "https://placehold.co/400x400/C8A97A/5C3317?text=Biscuits",
-        rating: 4.5,
-        reviews: 420,
-        badge: null
-    },
-    {
-        id: 12,
-        name: "Tropicana Orange Juice (1L)",
-        category: "Snacks",
-        price: 120,
-        originalPrice: 140,
-        image: "https://placehold.co/400x400/FF8C00/FFFFFF?text=Orange+Juice",
-        rating: 4.7,
-        reviews: 310,
-        badge: "Fresh"
-    },
-    {
-        id: 13,
-        name: "Coca-Cola Cold Drink (600ml)",
-        category: "Snacks",
-        price: 45,
-        originalPrice: 50,
-        image: "https://placehold.co/400x400/C8102E/FFFFFF?text=Cold+Drink",
-        rating: 4.8,
-        reviews: 750,
-        badge: "High Demand"
-    }
-];
+// Dynamic API URL for Local vs Production
+const API_URL = window.location.hostname.includes('github.io')
+    ? 'https://grocery-app-backend-shubham.onrender.com/api' // Replace with your Render URL later
+    : `http://${window.location.hostname}:5000/api`;
 
-// Load products from localStorage (Admin can add/remove)
-let products = JSON.parse(localStorage.getItem('products'));
-if (!products || products.length === 0) {
-    products = DEFAULT_PRODUCTS;
-    localStorage.setItem('products', JSON.stringify(products));
+// Product Catalog (Loaded from Backend)
+let products = [];
+
+// Load products from Backend
+async function fetchProducts() {
+    try {
+        const response = await fetch(`${API_URL}/products`);
+        products = await response.json();
+        products = products.map(p => ({ ...p, image: cleanImageUrl(p) }));
+        if (productsContainer) renderProducts();
+    } catch (err) {
+        console.error('Error fetching products:', err);
+        showToast('Failed to load products. Using offline data.', 'error');
+        // Fallback to localStorage if offline
+        products = JSON.parse(localStorage.getItem('products')) || [];
+        products = products.map(p => ({ ...p, image: cleanImageUrl(p) }));
+        if (productsContainer) renderProducts();
+    }
+}
+
+function cleanImageUrl(p) {
+    const replacements = {
+        "Cadbury Dairy Milk": "https://images.unsplash.com/photo-1548907040-4baa42d10919?auto=format&fit=crop&q=80&w=400",
+        "Lays Classic Chips": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&q=80&w=400",
+        "Britannia Good Day Biscuits": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&q=80&w=400",
+        "Tropicana Orange Juice (1L)": "https://images.unsplash.com/photo-1547514701-42782101795e?auto=format&fit=crop&q=80&w=400",
+        "Coca-Cola Cold Drink (600ml)": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=400"
+    };
+
+    if (replacements[p.name]) return replacements[p.name];
+    
+    // If it's a placeholder or missing, return a generic high-quality grocery image
+    if (!p.image || p.image.includes('placehold.co')) {
+        return `https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400`;
+    }
+    return p.image;
 }
 // Shopping Cart State
 let cart = JSON.parse(localStorage.getItem('cart')) || []
@@ -167,8 +56,9 @@ const cartOverlay = document.getElementById('cartOverlay');
 
 // Initialize App
 function init() {
-    if (productsContainer) renderProducts();
+    fetchProducts();
     updateCartUI();
+    updateNavUI();
 
     // Register PWA Service Worker
     if ('serviceWorker' in navigator) {
@@ -270,7 +160,7 @@ function addToCart(event, productId) {
         btn.innerHTML = '<ion-icon name="checkmark-outline"></ion-icon>';
         btn.style.backgroundColor = 'var(--primary-color)';
         btn.style.color = 'white';
-        
+
         setTimeout(() => {
             btn.innerHTML = originalIcon;
             btn.style.backgroundColor = 'var(--surface-color)';
@@ -306,13 +196,27 @@ function saveProducts() {
     localStorage.setItem('products', JSON.stringify(products));
 }
 
-function deleteProduct(productId) {
+async function deleteProduct(productId) {
     if (!confirm('Are you sure you want to delete this product?')) return;
-    products = products.filter(p => p.id !== productId);
-    saveProducts();
-    // Re-render admin table if on admin page
-    if (typeof renderAdminProducts === 'function') renderAdminProducts();
-    showToast('Product deleted successfully.');
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/products/${productId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            products = products.filter(p => p.id !== productId);
+            if (typeof renderAdminProducts === 'function') renderAdminProducts();
+            showToast('Product deleted successfully.');
+        } else {
+            const data = await response.json();
+            showToast(data.error || 'Delete failed', 'error');
+        }
+    } catch (err) {
+        showToast('Connection error', 'error');
+    }
 }
 
 function updateCartUI() {
@@ -359,6 +263,45 @@ function updateCartUI() {
     if (cartTotalPrice) cartTotalPrice.innerText = `₹${total}`;
 }
 
+function updateNavUI() {
+    const navActions = document.getElementById('navActions');
+    if (!navActions) return;
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    const token = localStorage.getItem('token');
+
+    if (token && user) {
+        navActions.innerHTML = `
+            <a href="orders.html" class="nav-link"><ion-icon name="receipt-outline"></ion-icon> My Orders</a>
+            <div class="user-profile" style="display:flex; align-items:center; gap:8px; font-weight:600; color:var(--primary-color);">
+                <ion-icon name="person-circle-outline" style="font-size:24px;"></ion-icon> Hi, ${user.username.split(' ')[0]}
+            </div>
+            <button onclick="logout()" class="nav-link" style="border:none; background:none; cursor:pointer; color: #EF4444;">Logout</button>
+            <button class="cart-btn" onclick="toggleCart()">
+                <ion-icon name="cart-outline"></ion-icon>
+                <span class="cart-badge" id="cartCount">${cart.reduce((s,i)=>s+i.quantity,0)}</span>
+            </button>
+        `;
+    } else {
+        navActions.innerHTML = `
+            <a href="delivery.html" class="nav-link"><ion-icon name="location-outline"></ion-icon> Track Order</a>
+            <a href="login.html" class="nav-link">Log In</a>
+            <a href="signup.html" class="btn-primary">Sign Up</a>
+            <button class="cart-btn" onclick="toggleCart()">
+                <ion-icon name="cart-outline"></ion-icon>
+                <span class="cart-badge" id="cartCount">${cart.reduce((s,i)=>s+i.quantity,0)}</span>
+            </button>
+        `;
+    }
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    showToast('Logged out successfully');
+    setTimeout(() => window.location.href = 'index.html', 1000);
+}
+
 // Run init on load
 document.addEventListener('DOMContentLoaded', init);
 
@@ -380,7 +323,7 @@ function showInstallPromotion() {
     banner.style.cssText = 'position:fixed; bottom:90px; left:20px; right:20px; background:white; padding:15px; border-radius:12px; box-shadow:var(--shadow-lg); z-index:9999; display:flex; justify-content:space-between; align-items:center; border: 2px solid var(--primary-color); animation: fadeIn 0.5s;';
     banner.innerHTML = `
         <div>
-            <div style="font-weight:700; color:var(--text-primary)">Install FreshCart</div>
+            <div style="font-weight:700; color:var(--text-primary)">Install FreshKart</div>
             <div style="font-size:12px; color:var(--text-secondary)">Add to home screen for native experience</div>
         </div>
         <div style="display:flex; align-items:center;">

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Admin Dashboard - FreshCart</title>
+    <title>Admin Dashboard - FreshKart</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="data:,">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
@@ -13,6 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { background-color: #F1F5F9; }
 
@@ -211,6 +212,54 @@
         }
         .empty-state-icon { font-size: 56px; margin-bottom: 12px; }
 
+        .ai-card {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        .ai-card::before {
+            content: '🤖';
+            position: absolute;
+            right: -10px;
+            top: -10px;
+            font-size: 100px;
+            opacity: 0.1;
+        }
+        .ai-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+        .ai-suggestion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .ai-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .chart-container {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
         @media (max-width: 900px) {
             .sidebar { display: none; }
             .main-panel { margin-left: 0; padding: 20px 16px; }
@@ -226,7 +275,13 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <ion-icon name="basket"></ion-icon> FreshCart
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 3H5L6.5 13H17.5L19 7H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="9" cy="20" r="1.5" fill="currentColor"/>
+                    <circle cx="15" cy="20" r="1.5" fill="currentColor"/>
+                    <path d="M14 6C14 6 15.5 7.5 15.5 10C15.5 12.5 12.5 14 12.5 14C12.5 14 11 12.5 11 10C11 7.5 12.5 6 14 6Z" fill="white" stroke="currentColor" stroke-width="1.2"/>
+                </svg>
+                FreshKart
             </div>
             <div class="nav-item active"><ion-icon name="grid-outline"></ion-icon> Dashboard</div>
             <div class="nav-item" onclick="document.getElementById('productsSection').scrollIntoView({behavior:'smooth'})"><ion-icon name="cube-outline"></ion-icon> Products</div>
@@ -235,7 +290,7 @@
             <div class="nav-item"><ion-icon name="bicycle-outline"></ion-icon> Delivery Team</div>
             <div style="flex:1;"></div>
             <a href="index.html" class="nav-item"><ion-icon name="storefront-outline"></ion-icon> View Storefront</a>
-            <div class="nav-item" style="color:#F87171;"><ion-icon name="log-out-outline"></ion-icon> Logout</div>
+            <div class="nav-item" style="color:#F87171;" onclick="logout()"><ion-icon name="log-out-outline"></ion-icon> Logout</div>
         </aside>
 
         <!-- Main Content -->
@@ -272,6 +327,20 @@
                 </div>
             </div>
 
+            <div class="ai-card" id="aiInsights">
+                <div class="ai-badge">🤖 AI PREDICTIONS</div>
+                <h2 style="font-family: Outfit; font-size: 20px; margin-bottom: 8px;">Product Demand & Optimization</h2>
+                <p style="color: #94A3B8; font-size: 14px;">Based on ratings, sales velocity, and category trends.</p>
+                <div class="ai-suggestion-grid" id="aiSuggestionsList">
+                    <div class="ai-item">Analyzing real-time data...</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2 style="font-size: 18px; margin-bottom: 20px; font-family: Outfit;">Sales Trend (Last 7 Days)</h2>
+                <canvas id="salesChart" height="100"></canvas>
+            </div>
+
             <!-- Recent Orders Table -->
             <div class="data-table-card">
                 <div class="table-header">
@@ -282,10 +351,12 @@
                     <thead>
                         <tr>
                             <th>Order ID</th><th>Customer</th><th>Date</th>
-                            <th>Amount</th><th>Status</th><th>Action</th>
+                            <th>Amount</th><th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="recentOrdersTableBody">
+                        <tr><td colspan="5" style="text-align:center; padding:30px;">Loading orders...</td></tr>
+                    </tbody>
                         <tr>
                             <td style="font-weight:600;">#ORD-9824X</td><td>Rahul Sharma</td>
                             <td>Today, 10:24 AM</td><td>₹680</td>
@@ -430,6 +501,23 @@
     <script>
         // ——— Admin-specific logic ———
 
+        // Authentication Guard
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user'));
+            
+            if (!token || !user || user.role !== 'admin') {
+                window.location.href = 'login.html';
+                return;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
         // Category color palette for auto-placeholders
         const CATEGORY_COLORS = {
             'Fruits':       '10B981/FFFFFF',
@@ -493,7 +581,7 @@
             }
         }
 
-        function handleProductSubmit(e) {
+        async function handleProductSubmit(e) {
             e.preventDefault();
 
             const name     = document.getElementById('pName').value.trim();
@@ -505,7 +593,6 @@
             const reviews  = parseInt(document.getElementById('pReviews').value) || 0;
             let   image    = document.getElementById('pImage').value.trim();
 
-            // Auto-generate a colored placeholder if no image given
             if (!image) {
                 const colors = CATEGORY_COLORS[category] || '10B981/FFFFFF';
                 const label  = encodeURIComponent(name.split(' ').slice(0,2).join('+'));
@@ -513,23 +600,158 @@
             }
 
             const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-
             const newProduct = { id: newId, name, category, price, originalPrice: origPrice, image, rating, reviews, badge };
-            products.push(newProduct);
-            saveProducts();
-            renderAdminProducts();
-            closeAddModal();
-            showToast(`"${name}" added to catalog! ✅`);
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_URL}/products`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(newProduct)
+                });
+
+                if (response.ok) {
+                    const savedProduct = await response.json();
+                    products.unshift(savedProduct);
+                    renderAdminProducts();
+                    closeAddModal();
+                    showToast(`"${name}" added successfully! ✅`);
+                } else {
+                    const data = await response.json();
+                    showToast(data.error || 'Failed to add product', 'error');
+                }
+            } catch (err) {
+                showToast('Connection error', 'error');
+            }
         }
 
-        // Close modal on outside click
         document.getElementById('addProductModal').addEventListener('click', function(e) {
             if (e.target === this) closeAddModal();
         });
 
-        // Init admin table
+        async function fetchDashboardData() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`${API_URL}/orders/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const stats = await response.json();
+                
+                // Update Numeric Stats
+                document.getElementById('statActiveOrders').textContent = stats.totalOrders;
+                document.querySelector('.stat-value').childNodes[0].textContent = `₹${stats.totalSales.toLocaleString()} `;
+
+                // Render Sales Chart
+                renderSalesChart(stats.salesByDate);
+
+                // Render AI Suggestions
+                renderAiSuggestions(stats);
+
+                // Fetch Recent Orders
+                const ordersRes = await fetch(`${API_URL}/orders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const orders = await ordersRes.json();
+                renderRecentOrders(orders);
+
+            } catch (err) {
+                console.error('Error fetching dashboard data:', err);
+                showToast('Failed to load real-time stats.', 'error');
+            }
+        }
+
+        function renderSalesChart(salesByDate) {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            const labels = Object.keys(salesByDate).sort();
+            const data = labels.map(label => salesByDate[label]);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.map(l => new Date(l).toLocaleDateString(undefined, {month:'short', day:'numeric'})),
+                    datasets: [{
+                        label: 'Daily Sales (₹)',
+                        data: data,
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#10B981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#F1F5F9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderAiSuggestions(stats) {
+            const container = document.getElementById('aiSuggestionsList');
+            const items = products.map(p => {
+                const sales = stats.itemSales[p.name] || 0;
+                // AI Logic: Sugest high rated products with low sales (undervalued)
+                // or high sales products for restocking.
+                let score = 0;
+                let reason = '';
+                
+                if (p.rating > 4.5 && sales < 3) {
+                    score = 90;
+                    reason = 'High Potential: Top Rated but Low Sales';
+                } else if (sales > 10) {
+                    score = 85;
+                    reason = 'Hot Seller: Restock Immmediately';
+                } else if (p.badge === 'Bestseller' && sales < 5) {
+                    score = 70;
+                    reason = 'Feature this: Bestseller needs more visibility';
+                }
+
+                return { ...p, sales, score, reason };
+            }).filter(p => p.score > 0).sort((a,b) => b.score - a.score).slice(0, 3);
+
+            if (items.length === 0) {
+                container.innerHTML = '<div class="ai-item">Order more items to unlock AI insights!</div>';
+                return;
+            }
+
+            container.innerHTML = items.map(p => `
+                <div class="ai-item">
+                    <div style="font-weight:700; color:var(--primary-color); margin-bottom:4px;">${p.name}</div>
+                    <div style="font-size:12px; color:#94A3B8;">${p.reason}</div>
+                    <div style="margin-top:10px; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#F8FAFC; opacity:0.6;">Confidence Score: ${p.score}%</div>
+                </div>
+            `).join('');
+        }
+
+        function renderRecentOrders(orders) {
+            const tbody = document.getElementById('recentOrdersTableBody');
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;">No orders yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = orders.slice(0, 5).map(o => `
+                <tr>
+                    <td style="font-weight:600;">#ORD-${o._id.slice(-6).toUpperCase()}</td>
+                    <td>${o.customerName}</td>
+                    <td>${new Date(o.createdAt).toLocaleDateString()}</td>
+                    <td>₹${o.totalAmount}</td>
+                    <td><span class="badge-status status-pending">${o.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            renderAdminProducts();
+            checkAuth();
+            fetchDashboardData();
         });
     </script>
 </body>

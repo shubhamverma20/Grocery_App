@@ -1,6 +1,6 @@
 {
-    "name": "FreshCart Groceries",
-    "short_name": "FreshCart",
+    "name": "FreshKart Groceries",
+    "short_name": "FreshKart",
     "description": "Order fresh groceries online with fast delivery, easy payments, and nearby store integration.",
     "start_url": "index.html",
     "display": "standalone",

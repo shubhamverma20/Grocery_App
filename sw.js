@@ -1,5 +1,5 @@
-const CACHE_NAME = 'freshcart-cache-v1';
-const DATA_CACHE_NAME = 'freshcart-data-cache-v1';
+const CACHE_NAME = 'freshkart-cache-v2';
+const DATA_CACHE_NAME = 'freshkart-data-cache-v2';
 
 const FILES_TO_CACHE = [
     './',
@@ -7,6 +7,8 @@ const FILES_TO_CACHE = [
     'cart.html',
     'delivery.html',
     'login.html',
+    'signup.html',
+    'orders.html',
     'admin.html',
     'offline.html',
     'css/style.css',

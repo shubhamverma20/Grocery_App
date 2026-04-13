@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - FreshKart</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        .orders-container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .order-card {
+            background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px;
+            box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+        }
+        .order-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 15px; border-bottom: 1px solid var(--bg-color); margin-bottom: 15px;
+        }
+        .order-id { font-weight: 700; color: var(--text-primary); }
+        .order-status {
+            padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase;
+        }
+        .status-pending { background: #FEF3C7; color: #D97706; }
+        .status-processing { background: #DBEAFE; color: #2563EB; }
+        .status-delivered { background: #D1FAE5; color: #059669; }
+        
+        .order-items { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
+        .order-item-img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
+        
+        .order-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 15px; font-size: 14px;
+        }
+        .order-total { font-weight: 700; font-size: 18px; color: var(--primary-color); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <div class="logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 3H5L6.5 13H17.5L19 7H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="9" cy="20" r="1.5" fill="currentColor"/>
+                        <circle cx="15" cy="20" r="1.5" fill="currentColor"/>
+                        <path d="M14 6C14 6 15.5 7.5 15.5 10C15.5 12.5 12.5 14 12.5 14C12.5 14 11 12.5 11 10C11 7.5 12.5 6 14 6Z" fill="white" stroke="currentColor" stroke-width="1.2"/>
+                    </svg>
+                </div>
+                FreshKart
+            </a>
+            <div class="nav-actions" id="navActions">
+                <a href="index.html" class="nav-link">Return Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="orders-container">
+            <h1 style="font-family: Outfit; margin-bottom: 30px;">Your Order History</h1>
+            <div id="ordersList">
+                <!-- Orders will be loaded here -->
+                <div style="text-align:center; padding:50px;">
+                    <div class="payment-spinner"></div>
+                    <p>Fetching your orders...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+        async function fetchMyOrders() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/orders/my-orders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const orders = await response.json();
+                renderOrders(orders);
+            } catch (err) {
+                showToast('Failed to load orders', 'error');
+            }
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('ordersList');
+            if (orders.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:60px; color:var(--text-secondary);">
+                        <ion-icon name="bag-handle-outline" style="font-size:64px; opacity:0.3;"></ion-icon>
+                        <p style="margin-top:15px; font-size:18px;">You haven't placed any orders yet.</p>
+                        <a href="index.html" class="btn-primary" style="display:inline-block; margin-top:20px; padding:12px 24px;">Start Shopping</a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = orders.map(o => `
+                <div class="order-card fade-in">
+                    <div class="order-header">
+                        <span class="order-id">#ORD-${o._id.slice(-6).toUpperCase()}</span>
+                        <span class="order-status status-${o.status.toLowerCase()}">${o.status}</span>
+                    </div>
+                    <div class="order-items">
+                        ${o.items.map(i => `<img src="${i.image}" class="order-item-img" title="${i.name}">`).join('')}
+                    </div>
+                    <div class="order-footer">
+                        <div style="color:var(--text-secondary)">
+                            ${new Date(o.createdAt).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})} • 
+                            ${o.items.length} ${o.items.length === 1 ? 'item' : 'items'}
+                        </div>
+                        <div class="order-total">₹${o.totalAmount}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchMyOrders);
+    </script>
+</body>
+</html>

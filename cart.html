@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout - FreshCart</title>
+    <title>Checkout - FreshKart</title>
     <link rel="stylesheet" href="css/style.css">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
@@ -184,6 +184,42 @@
             0% { transform: scale(0); }
             100% { transform: scale(1); }
         }
+
+        /* Payment Modal */
+        .payment-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .payment-modal-overlay.show { display: flex; }
+        .payment-modal {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            animation: slideUp 0.4s;
+        }
+        .payment-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideUp { 0% { transform: translateY(50px); opacity:0; } 100% { transform: translateY(0); opacity:1; } }
     </style>
 
     <!-- PWA Settings -->
@@ -197,10 +233,17 @@
     <nav class="navbar">
         <div class="container nav-container">
             <a href="index.html" class="logo">
-                <div class="logo-icon"><ion-icon name="basket-outline"></ion-icon></div>
-                FreshCart
+                <div class="logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 3H5L6.5 13H17.5L19 7H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="9" cy="20" r="1.5" fill="currentColor"/>
+                        <circle cx="15" cy="20" r="1.5" fill="currentColor"/>
+                        <path d="M14 6C14 6 15.5 7.5 15.5 10C15.5 12.5 12.5 14 12.5 14C12.5 14 11 12.5 11 10C11 7.5 12.5 6 14 6Z" fill="white" stroke="currentColor" stroke-width="1.2"/>
+                    </svg>
+                </div>
+                FreshKart
             </a>
-            <div class="nav-actions">
+            <div class="nav-actions" id="navActions">
                 <a href="index.html" class="nav-link">Continue Shopping</a>
             </div>
         </div>
@@ -308,6 +351,16 @@
     </main>
 
     <!-- Success Output -->
+    <div class="payment-modal-overlay" id="paymentModal">
+        <div class="payment-modal">
+            <div id="paymentStatus">
+                <div class="payment-spinner"></div>
+                <h2 style="font-family: Outfit;">Processing Payment...</h2>
+                <p style="color: var(--text-secondary); margin-top: 10px;">Please do not close the browser.</p>
+            </div>
+        </div>
+    </div>
+
     <div class="success-overlay" id="successOverlay">
         <ion-icon name="checkmark-circle" class="success-icon"></ion-icon>
         <h1 style="font-size: 36px; margin-bottom: 10px; font-family: Outfit;">Order Placed Successfully!</h1>
@@ -381,11 +434,70 @@
             });
         });
 
-        function placeOrder() {
-            // Show Success UI
-            document.getElementById('successOverlay').classList.add('show');
-            // Clear cart memory
-            localStorage.removeItem('cart');
+        async function placeOrder() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please log in to place an order', 'error');
+                setTimeout(() => window.location.href = 'login.html', 1500);
+                return;
+            }
+
+            const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
+            if(storedCart.length === 0) return showToast('Your cart is empty', 'error');
+
+            const firstName = document.querySelector('input[placeholder="John"]').value;
+            const lastName = document.querySelector('input[placeholder="Doe"]').value;
+            const address = document.querySelector('input[placeholder="123 Shopping Street, Area Name"]').value;
+            const phone = document.querySelector('input[placeholder="+91 9876543210"]').value;
+            const pinCode = document.querySelector('input[placeholder="400001"]').value;
+            const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+
+            if(!firstName || !address || !phone) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+
+            // Show Payment Modal
+            const modal = document.getElementById('paymentModal');
+            modal.classList.add('show');
+
+            const total = parseInt(document.getElementById('summaryTotal').innerText.replace('₹', ''));
+
+            const orderData = {
+                customerName: `${firstName} ${lastName}`,
+                items: storedCart,
+                totalAmount: total,
+                shippingAddress: { firstName, lastName, address, phone, pinCode },
+                paymentMethod
+            };
+
+            // Simulate Network Delay for Payment
+            setTimeout(async () => {
+                try {
+                    const response = await fetch(`${API_URL}/orders`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(orderData)
+                    });
+
+                    if (response.ok) {
+                        const order = await response.json();
+                        modal.classList.remove('show');
+                        document.getElementById('successOverlay').querySelector('p').innerText = `Your groceries are on the way. Order ID: #ORD-${order._id.slice(-6).toUpperCase()}`;
+                        document.getElementById('successOverlay').classList.add('show');
+                        localStorage.removeItem('cart');
+                    } else {
+                        modal.classList.remove('show');
+                        showToast('Transaction failed. Try again.', 'error');
+                    }
+                } catch (err) {
+                    modal.classList.remove('show');
+                    showToast('Connection error. Is the server running?', 'error');
+                }
+            }, 2500);
         }
     </script>
 </body>

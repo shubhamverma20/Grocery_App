@@ -13,7 +13,12 @@ images = [
     ("apples.jpg", "https://loremflickr.com/400/400/apple"),
     ("spinach.jpg", "https://loremflickr.com/400/400/spinach"),
     ("eggs.jpg", "https://loremflickr.com/400/400/egg"),
-    ("coriander.jpg", "https://loremflickr.com/400/400/coriander")
+    ("coriander.jpg", "https://loremflickr.com/400/400/coriander"),
+    ("chocolate.jpg", "https://loremflickr.com/400/400/chocolate"),
+    ("chips.jpg", "https://loremflickr.com/400/400/chips"),
+    ("biscuits.jpg", "https://loremflickr.com/400/400/biscuits"),
+    ("orangejuice.jpg", "https://loremflickr.com/400/400/orangejuice"),
+    ("colddrink.jpg", "https://loremflickr.com/400/400/colddrink")
 ]
 
 req_headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}

@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./server
+    container_name: freshkart-backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./server/.env
+    networks:
+      - freshkart-network
+
+  frontend:
+    image: nginx:alpine
+    container_name: freshkart-frontend
+    ports:
+      - "3000:80"
+    volumes:
+      - .:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+    networks:
+      - freshkart-network
+
+networks:
+  freshkart-network:
+    driver: bridge
